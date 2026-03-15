@@ -42,18 +42,39 @@ export const login = async (req, res) => {
             { expiresIn: '1d' }
         );
 
-        return res.status(200).json({
-            success: true,
-            message: `Hello ${account.name}, glad to see you again!`,
-            token: authToken,
-            role: account.role 
-        });
+        // --- COOKIE IMPLEMENTATION ---
+        const cookieOptions = {
+            expires: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // Expires in 1 day
+            httpOnly: true, // Prevents JS access (Protects against XSS)
+            secure: process.env.NODE_ENV === "production", // Only sent over HTTPS in production
+            sameSite: "strict", // Prevents CSRF attacks
+        };
+
+        return res
+            .status(200)
+            .cookie("token", authToken, cookieOptions) // Set the cookie here
+            .json({
+                success: true,
+                message: `Hello ${account.name}, glad to see you again!`,
+                role: account.role // We still send the role for UI logic
+            });
 
     } catch (error) {
         return res.status(500).json({ 
             success: false, 
-            message: "Something went wrong on our end. Please try again later.",
+            message: "Something went wrong.",
             error: error.message 
         });
     }
+};
+
+export const logout = (req, res) => {
+    res.cookie("token", null, {
+        expires: new Date(Date.now()),
+        httpOnly: true,
+    });
+    res.status(200).json({
+        success: true,
+        message: "Logged out successfully",
+    });
 };

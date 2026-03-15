@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 
 export const isLogin = (req, res, next) => {
     try {
-        const authToken = req.headers.authorization?.split(" ")[1];
+        const authToken = req.cookies.token;
 
         if (!authToken) {
             return res.status(401).json({ 
@@ -10,7 +10,6 @@ export const isLogin = (req, res, next) => {
                 message: "Please log in to access this feature." 
             });
         }
-
         const verifiedUser = jwt.verify(authToken, process.env.JWT_SECRET);
         req.user = verifiedUser; 
         
